@@ -38,7 +38,7 @@ let item3Img;
 let item4Img;
 
 //physics
-let velocityX = -10; //item moving left speed
+let velocityX = -8; //item moving left speed
 let velocityY = 0;
 let gravity = .35;
 
@@ -83,12 +83,13 @@ window.onload = function restartGame() {
     item4Img.src = "./img/georgia.png";
 
     requestAnimationFrame(update);
-    setInterval(placeItem, 700); //1000 milliseconds = 1 second
+    setInterval(placeItem, 600); //1000 milliseconds = 1 second
     document.addEventListener("keydown", movehuman);
     restartBtn.addEventListener("click", () => {
         gameOver = false;
         score = 0;
-        itemArray = [];
+        velocityX = -8;
+        itemArray.length = 0;
         imgMeme.style.display = "none";
         board.style.display = "inline-block";
         restartBtn.style.display = "none";
@@ -112,12 +113,12 @@ function update() {
     //human
     velocityY += gravity;
     human.y = Math.min(human.y + velocityY, humanY); //apply gravity to current human.y, making sure it doesn't exceed the ground
-    if (human.y == humanY) {
+    if (human.y == humanY && humanImg.src !== "./img/human.png") {
         human.humanHeight = 114.3; // 97 + 20%
         humanImg.src = "./img/human.png";
-    } else {
-        human.humanHeight = 111.6; // 93 + 20%
-        humanImg.src = "./img/humanJump.png";
+        humanImg.onload = function() {
+            context.drawImage(humanImg, human.x, human.y, human.width, human.height);
+        }
     }
     context.drawImage(humanImg, human.x, human.y, human.width, human.height);
 
@@ -145,12 +146,22 @@ function update() {
     }
     //score
     score++;
+    if (Number.isInteger(score / 1000)) {
+        up = score / 1000;
+        velocityX -= ((score / 1000) / up);
+        console.log(velocityX)
+    }
     scoreElem.textContent = `${score}`;
 }
 
 function movehuman(e) {
     if ((e.code == "Space" || e.code == "ArrowUp") && human.y == humanY) {
         //jump
+        human.humanHeight = 111.6; // 93 + 20%
+        humanImg.src = "./img/humanJump.png";
+        humanImg.onload = function() {
+            context.drawImage(humanImg, human.x, human.y, human.width, human.height);
+        }
         velocityY = -10;
     }
     else if (e.code == "ArrowDown" && human.y == humanY) {
@@ -160,8 +171,9 @@ function movehuman(e) {
         board.style.display = "inline-block";
         restartBtn.style.display = "none";
         gameOver = false;
+        velocityX = -8;
         score = 0;
-        itemArray = [];
+        itemArray.length = 0;
     }
 }
 
@@ -181,7 +193,7 @@ function placeItem() {
 
     let placeItemChance = Math.random(); //0 - 0.9999...
 
-    if (placeItemChance > .98 && score > 5000)  { //2% you get item4
+    if (placeItemChance > .99 && score > 5000)  { //1% you get item4
         item.img = item4Img;
         item.width = item4Width;
         item.height = itemBonusHeight;
@@ -201,7 +213,7 @@ function placeItem() {
         itemArray.push(item);
     }
 
-    if (itemArray.length > 5) {
+    if (itemArray.length > 10) {
         itemArray.shift(); //remove the first element from the array so that the array doesn't constantly grow
     }
 }
